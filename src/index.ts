@@ -41,9 +41,14 @@ app.post('/api/new', async (req: Request, res: Response): Promise<any> => {
   
       const contact = await prisma.contact.findMany({
         where: {
-            phoneNumber
+            phoneNumber,
+            email
         }
       });
+      
+
+
+
 
       return res.status(200).json({ status: "Success", contact });
     } catch (error: any) {
@@ -53,4 +58,5 @@ app.post('/api/new', async (req: Request, res: Response): Promise<any> => {
     }
   });
 
-  
+
+
