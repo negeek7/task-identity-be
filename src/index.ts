@@ -30,3 +30,27 @@ app.post('/api/new', async (req: Request, res: Response): Promise<any> => {
       return res.status(500).json({ status: "Error", message: error.message });
     }
   });
+
+
+
+  app.post('/api/identify', async (req: Request, res: Response): Promise<any> => {
+    try {
+      const { email, phoneNumber } = req.body;
+
+      if(!email && !phoneNumber) return res.send(400).json({ status: "Error", message: "Please provide user email or phone number"})
+  
+      const contact = await prisma.contact.findMany({
+        where: {
+            phoneNumber
+        }
+      });
+
+      return res.status(200).json({ status: "Success", contact });
+    } catch (error: any) {
+      console.log("Error creating contact", error);
+  
+      return res.status(500).json({ status: "Error", message: error.message });
+    }
+  });
+
+  
