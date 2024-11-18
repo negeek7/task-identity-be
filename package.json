@@ -11,5 +11,6 @@
   "description": "",
   "devDependencies": {
     "prisma": "^5.22.0",
+    "typescript": "^5.6.3"
   }
 }
