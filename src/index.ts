@@ -12,9 +12,9 @@ app.listen(PORT, () => {
 
 app.use(express.json());
 
-app.post('/api/new', async (request: Request, response: Response) => {
+app.post('/api/new', async (req: Request, res: Response): Promise<any> => {
     try {
-      const { email, phoneNumber } = request.body;
+      const { email, phoneNumber } = req.body;
   
       const contact = await prisma.contact.create({
         data: {
@@ -23,10 +23,10 @@ app.post('/api/new', async (request: Request, response: Response) => {
         },
       });
 
-      return response.status(200).json({ status: "Success", contact });
+      return res.status(200).json({ status: "Success", contact });
     } catch (error: any) {
       console.log("Error creating contact", error);
   
-      return response.status(500).json({ status: "Error", message: error.message });
+      return res.status(500).json({ status: "Error", message: error.message });
     }
   });
