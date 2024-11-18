@@ -13,7 +13,7 @@ model Contact {
     phoneNumber String?
     email String?
     linkedId Int? // the ID of another Contact linked to this one
-    linkPrecedence String
+    linkPrecedence String?
     createdAt DateTime @default(now())
     updatedAt DateTime @default(now())
     deletedAt DateTime?

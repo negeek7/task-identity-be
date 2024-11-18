@@ -15,10 +15,10 @@ app.use(express.json());
 app.post('/api/new', async (request: Request, response: Response) => {
     const {email, phoneNumber} = request.body;
 
-    const contact = await prisma.contact.create({
+    const contact = prisma.contact.create({
         data: {
             email,
-            phoneNumber,
+            phoneNumber
         }
-    })  
+    })
 })
