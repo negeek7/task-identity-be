@@ -3,7 +3,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function handleIdentifyContact(req: Request, res: Response) {
+export async function handleIdentifyContact(req: Request, res: Response): Promise<any> {
     try {
         const { email, phoneNumber } = req.body;
         if (!email && !phoneNumber) return res.send(400).json({ status: "Error", message: "Please provide user email or phone number" });
@@ -15,7 +15,7 @@ export async function handleIdentifyContact(req: Request, res: Response) {
             }
         });
 
-        if(!existingContact.length) createNewContact({email, phoneNumber, linkPrecedence: true}, res)
+        if(!existingContact.length) await createNewContact({email, phoneNumber, linkPrecedence: true}, res)
 
         console.log(existingContact, "existingContact")
 
@@ -35,6 +35,7 @@ async function createNewContact(data: object, res: Response){
         const newContact = await prisma.contact.create({
             data
         })
+        return res.status(200).json({message: "New contact created", data: newContact})
     } catch (error) {
         console.log("Error creating new contact", error);
     }
