@@ -41,7 +41,8 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
                 contact.email === email
             );
 
-            if(isDuplicate) {
+            if(!isDuplicate) {
+                console.log("HHHHHHHAAAAAAAAA")
                 newContact = await createNewContact({email, phoneNumber}, "secondary", res);
                 data.emails.push(email);
                 data.phoneNumbers.push(phoneNumber);
@@ -74,6 +75,7 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
 
 
 async function createNewContact(data: object, linkPrecedence: string, res: Response){
+    console.log("creating new contact");
     try {
         const newContact = await prisma.contact.create({
             data: {
