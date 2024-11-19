@@ -10,8 +10,10 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
 
         const existingContact = await prisma.contact.findMany({
             where: {
-                phoneNumber,
-                email
+                OR: [
+                    {phoneNumber},
+                    {email}
+                ]
             }
         });
 
@@ -36,19 +38,10 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
                     data.secondaryContactIds.push(contact.id);
                 }
             }
-
             console.log(data, "dataaa");
-
         } else {
-            return createNewContact({email, phoneNumber, linkPrecedence: "primary"}, res)
+            return createNewContact({email, phoneNumber, linkPrecedence: null}, res)
         }
-
-
-
-
-        
-
-
 
         return res.status(200).json({ status: "Success" });
     } catch (error: any) {
