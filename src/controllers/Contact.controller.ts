@@ -8,7 +8,9 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
         const { email, phoneNumber } = req.body;
         if (!email && !phoneNumber) return res.status(400).json({ status: "Error", message: "Please provide user email or phone number" });
 
-        const existingContact = await prisma.contact.findMany({
+
+        // getting any existing contacts
+        const existingContacts = await prisma.contact.findMany({
             where: {
                 OR: [
                     {phoneNumber},
@@ -17,17 +19,37 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
             }
         });
 
-        console.log(existingContact, "existingContact");
+        console.log(existingContacts, "existingContacts");
 
-        if(existingContact.length > 0) {
+        // actions for if existing contacts exists
+        if(existingContacts.length > 0) {
+
+            console.log(existingContacts.length, "existingContacts length");
+
+            // structure for identify response
+            let newContact = null;
             let data: {[key: string]: any} = {
                 primaryContactId: null,
                 emails: [],
                 phoneNumbers: [],
                 secondaryContactIds: []
             };
-            for(let i=0; i < existingContact.length; i++){
-                let contact = existingContact[i];
+
+            // finding if identify query has new info
+            const isDuplicate = existingContacts.some(contact =>
+                contact.phoneNumber === phoneNumber &&
+                contact.email === email
+            );
+
+            if(isDuplicate) {
+                newContact = await createNewContact({email, phoneNumber}, "secondary", res);
+                data.emails.push(email);
+                data.phoneNumbers.push(phoneNumber);
+                data.secondaryContactIds.push(newContact?.id)
+            }
+
+            for(let i=0; i < existingContacts.length; i++){
+                let contact = existingContacts[i];
                 if(contact.linkPrecedence === "primary") {
                     data.primaryContactId = contact.id;
                     data.emails.unshift(contact.email);
@@ -38,12 +60,12 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
                     data.secondaryContactIds.push(contact.id);
                 }
             }
-            console.log(data, "dataaa");
-        } else {
-            return createNewContact({email, phoneNumber, linkPrecedence: null}, res)
-        }
 
-        return res.status(200).json({ status: "Success" });
+            return res.status(200).json({status: "Success", contact: data})
+        } else {
+            let newContact = await createNewContact({email, phoneNumber}, "primary", res)
+            return res.status(200).json({status: "Success", newContact});
+        }
     } catch (error: any) {
         console.log("Error creating contact", error);
         return res.status(500).json({ status: "Error", message: error.message });
@@ -51,14 +73,17 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
 }
 
 
-async function createNewContact(data: object, res: Response){
+async function createNewContact(data: object, linkPrecedence: string, res: Response){
     try {
         const newContact = await prisma.contact.create({
-            data
+            data: {
+                ...data,
+                linkPrecedence
+            },
         })
-        return res.status(200).json({message: "New contact created", data: newContact})
+        return newContact
     } catch (error) {
         console.log("Error creating new contact", error);
-        return res.status(500).json({Status: "Error", message: "Error creating new contact"})
+        throw error
     }
 }
