@@ -22,6 +22,20 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
         console.log(existingContacts, "existingContacts");
 
         // actions for if existing contacts exists
+        if(existingContacts.length === 1) {
+            let contact = existingContacts[0]; 
+            let data: {[key: string]: any} = {
+                primaryContactId: null,
+                emails: [],
+                phoneNumbers: [],
+                secondaryContactIds: []
+            };
+
+            data.primaryContactId = contact.id;
+            data.emails.push(contact.email);
+            data.phoneNumbers.push(contact.phoneNumber);
+        }
+
         if(existingContacts.length > 0) {
 
             console.log(existingContacts.length, "existingContacts length");
@@ -42,7 +56,7 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
             );
 
             if(!isDuplicate) {
-                console.log("HHHHHHHAAAAAAAAA")
+                console.log("HELLOOOOOO")
                 newContact = await createNewContact({email, phoneNumber}, "secondary", res);
                 data.emails.push(email);
                 data.phoneNumbers.push(phoneNumber);
