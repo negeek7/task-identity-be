@@ -13,8 +13,8 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
         const existingContacts = await prisma.contact.findMany({
             where: {
                 OR: [
-                    {phoneNumber},
-                    {email}
+                    { phoneNumber },
+                    { email }
                 ]
             }
         });
@@ -22,27 +22,27 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
         console.log(existingContacts, "existingContacts");
 
         // actions for if existing contacts exists
-        if(existingContacts.length === 1) {
-            let contact = existingContacts[0]; 
-            let data: {[key: string]: any} = {
-                primaryContactId: null,
-                emails: [],
-                phoneNumbers: [],
-                secondaryContactIds: []
-            };
+        // if(existingContacts.length === 1) {
+        //     let contact = existingContacts[0]; 
+        //     let data: {[key: string]: any} = {
+        //         primaryContactId: null,
+        //         emails: [],
+        //         phoneNumbers: [],
+        //         secondaryContactIds: []
+        //     };
 
-            data.primaryContactId = contact.id;
-            data.emails.push(contact.email);
-            data.phoneNumbers.push(contact.phoneNumber);
-        }
+        //     data.primaryContactId = contact.id;
+        //     data.emails.push(contact.email);
+        //     data.phoneNumbers.push(contact.phoneNumber);
+        // }
 
-        if(existingContacts.length > 0) {
+        if (existingContacts.length > 0) {
 
             console.log(existingContacts.length, "existingContacts length");
 
             // structure for identify response
             let newContact = null;
-            let data: {[key: string]: any} = {
+            let data: { [key: string]: any } = {
                 primaryContactId: null,
                 emails: [],
                 phoneNumbers: [],
@@ -50,22 +50,27 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
             };
 
             // finding if identify query has new info
-            const isDuplicate = existingContacts.some(contact =>
-                contact.phoneNumber === phoneNumber &&
-                contact.email === email
+            const isDuplicate = existingContacts.some(contact => {
+                if (email === null || phoneNumber === null) {
+                    return true;
+                } else {
+                    contact.phoneNumber === phoneNumber &&
+                        contact.email === email
+                }
+            }
             );
 
-            if(!isDuplicate) {
-                console.log("HELLOOOOOO")
-                newContact = await createNewContact({email, phoneNumber}, "secondary", res);
+            if (!isDuplicate) {
+                console.log("duplicate handler")
+                newContact = await createNewContact({ email, phoneNumber }, "secondary", res);
                 data.emails.push(email);
                 data.phoneNumbers.push(phoneNumber);
                 data.secondaryContactIds.push(newContact?.id)
             }
 
-            for(let i=0; i < existingContacts.length; i++){
+            for (let i = 0; i < existingContacts.length; i++) {
                 let contact = existingContacts[i];
-                if(contact.linkPrecedence === "primary") {
+                if (contact.linkPrecedence === "primary") {
                     data.primaryContactId = contact.id;
                     data.emails.unshift(contact.email);
                     data.phoneNumbers.unshift(contact.phoneNumber);
@@ -76,10 +81,10 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
                 }
             }
 
-            return res.status(200).json({status: "Success", contact: data})
+            return res.status(200).json({ status: "Success", contact: data })
         } else {
-            let newContact = await createNewContact({email, phoneNumber}, "primary", res)
-            return res.status(200).json({status: "Success", newContact});
+            let newContact = await createNewContact({ email, phoneNumber }, "primary", res)
+            return res.status(200).json({ status: "Success", newContact });
         }
     } catch (error: any) {
         console.log("Error creating contact", error);
@@ -88,7 +93,7 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
 }
 
 
-async function createNewContact(data: object, linkPrecedence: string, res: Response){
+async function createNewContact(data: object, linkPrecedence: string, res: Response) {
     console.log("creating new contact");
     try {
         const newContact = await prisma.contact.create({
