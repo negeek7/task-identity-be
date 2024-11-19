@@ -15,22 +15,17 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
             }
         });
 
-        if(!existingContact.length) await createNewContact({email, phoneNumber, linkPrecedence: true}, res)
-
-        console.log(existingContact, "existingContact")
-
+        if(!existingContact.length) return createNewContact({email, phoneNumber, linkPrecedence: "primary"}, res)
 
         return res.status(200).json({ status: "Success" });
     } catch (error: any) {
         console.log("Error creating contact", error);
-
         return res.status(500).json({ status: "Error", message: error.message });
     }
 }
 
 
 async function createNewContact(data: object, res: Response){
-
     try {
         const newContact = await prisma.contact.create({
             data
@@ -38,8 +33,6 @@ async function createNewContact(data: object, res: Response){
         return res.status(200).json({message: "New contact created", data: newContact})
     } catch (error) {
         console.log("Error creating new contact", error);
+        return res.status(500).json({Status: "Error", message: "Error creating new contact"})
     }
-
-
-
 }
