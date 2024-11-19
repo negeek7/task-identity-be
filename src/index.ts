@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { handleIdentifyContact } from './controllers/Contact.controller';
 
 const app = express();
 const PORT = process.env.PORT;
@@ -14,49 +15,26 @@ app.use(express.json());
 
 app.post('/api/new', async (req: Request, res: Response): Promise<any> => {
     try {
-      const { email, phoneNumber } = req.body;
-  
-      const contact = await prisma.contact.create({
-        data: {
-          email,
-          phoneNumber,
-        },
-      });
+        const { email, phoneNumber } = req.body;
 
-      return res.status(200).json({ status: "Success", contact });
+        const contact = await prisma.contact.create({
+            data: {
+                email,
+                phoneNumber,
+            },
+        });
+
+        return res.status(200).json({ status: "Success", contact });
     } catch (error: any) {
-      console.log("Error creating contact", error);
-  
-      return res.status(500).json({ status: "Error", message: error.message });
+        console.log("Error creating contact", error);
+
+        return res.status(500).json({ status: "Error", message: error.message });
     }
-  });
+});
 
 
 
-  app.post('/api/identify', async (req: Request, res: Response): Promise<any> => {
-    try {
-      const { email, phoneNumber } = req.body;
-
-      if(!email && !phoneNumber) return res.send(400).json({ status: "Error", message: "Please provide user email or phone number"})
-  
-      const contact = await prisma.contact.findMany({
-        where: {
-            phoneNumber,
-            email
-        }
-      });
-      
-
-
-
-
-      return res.status(200).json({ status: "Success", contact });
-    } catch (error: any) {
-      console.log("Error creating contact", error);
-  
-      return res.status(500).json({ status: "Error", message: error.message });
-    }
-  });
+app.post('/api/identify', handleIdentifyContact);
 
 
 
