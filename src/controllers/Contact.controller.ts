@@ -3,6 +3,18 @@ import { Prisma, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+interface PrimaryContact {
+    id: number;               
+    phoneNumber?: string | null;        
+    email?: string | null;              
+    linkedId?: number | null;           
+    linkPrecedence?: string | null;     
+    createdAt?: Date;            
+    updatedAt: Date;             
+    deletedAt?: Date | null;            
+}
+
+
 export async function handleIdentifyContact(req: Request, res: Response): Promise<any> {
     try {
         const { email, phoneNumber } = req.body;
@@ -23,18 +35,18 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
 
         if (existingContacts.length > 0) {
 
-            let primaryContact = existingContacts.find(contact => contact.linkPrecedence === "primary");
+            let primaryContact: PrimaryContact | undefined = existingContacts.find(contact => contact.linkPrecedence === "primary");
 
             // structure for identify response
             let isPayloadExist = existingContacts.some((contact) => {
-                if (phoneNumber) contact.phoneNumber === phoneNumber
-                else if (email) contact.email === email;
+                if (phoneNumber && !email) contact.phoneNumber === phoneNumber;
+                else if (email && !phoneNumber) contact.email === email;
                 else contact.phoneNumber === phoneNumber && contact.email === email;
             });
 
             if (!isPayloadExist) {
                 let newContact = await createNewContact({ email, phoneNumber, linkPrecedence: "primary", linkedId: primaryContact?.id }, res);
-                let data = await handleExisitingContact(existingContacts, { email, phoneNumber });
+                let data = await handleExisitingContact(existingContacts, primaryContact);
 
                 if (email) data.emails.push(newContact.email);
                 if (phoneNumber) data.phoneNumbers.push(newContact.phoneNumber);
@@ -42,7 +54,11 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
                 return res.status(200).json({ status: "Success", contact: data })
             }
 
-            let data = await handleExisitingContact(existingContacts, { email, phoneNumber });
+            let data = await handleExisitingContact(existingContacts);
+
+
+
+
             console.log(data, "DATA");
             return res.status(200).json({ status: "Success", contact: data })
 
@@ -74,9 +90,7 @@ async function createNewContact(data: object, res: Response) {
 }
 
 
-async function handleExisitingContact(existingContacts: any[], payload: any) {
-    const { email, phoneNumber } = payload;
-
+async function handleExisitingContact(existingContacts: any[], primaryContact: PrimaryContact | undefined) {
 
     let data: { [key: string]: any } = {
         primaryContactId: null,
@@ -85,20 +99,19 @@ async function handleExisitingContact(existingContacts: any[], payload: any) {
         secondaryContactIds: []
     };
 
-
+    // setting primary field first
+    data.primaryContactId = primaryContact.id;
+    data.emails.push(primaryContact.email);
+    data.phoneNumbers.push(primaryContact.phoneNumber);
 
     for (let i = 0; i < existingContacts.length; i++) {
         let contact = existingContacts[i];
-        if (contact.linkPrecedence === "primary") {
-            data.primaryContactId = contact.id;
-            data.emails.unshift(contact.email);
-            data.phoneNumbers.unshift(contact.phoneNumber);
-        } else {
-            data.emails.push(contact.email);
-            data.phoneNumbers.push(contact.phoneNumber);
-            data.secondaryContactIds.push(contact.id);
-        }
-    }
 
+        if (contact.linkPrecedence === "primary") continue;
+
+        data.emails.push(contact.email);
+        data.phoneNumbers.push(contact.phoneNumber);
+        data.secondaryContactIds.push(contact.id);
+    }
     return data;
 }
