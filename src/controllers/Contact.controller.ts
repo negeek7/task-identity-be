@@ -48,18 +48,19 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
             });
 
             if (!isPayloadExist) {
+                console.log("WWHHWHWHWH")
                 let newContact = await createNewContact({ email, phoneNumber, linkPrecedence: "secondary", linkedId: primaryContact?.id }, res);
                 let data = await handleExisitingContact(existingContacts, primaryContact);
 
                 if (email) data.emails.push(newContact.email);
                 if (phoneNumber) data.phoneNumbers.push(newContact.phoneNumber);
                 data.secondaryContactIds.push(newContact.id);
-                return res.status(200).json({ status: "Success", contact: data })
+                return res.status(200).json({ status: "Success", contact: data });
             }
 
             let data = await handleExisitingContact(existingContacts, primaryContact);
             console.log(data, "DATA");
-            return res.status(200).json({ status: "Success", contact: data })
+            return res.status(200).json({ status: "Success", contact: data });
 
         } else {
             let newContact = await createNewContact({ email, phoneNumber, linkPrecedence: "primary" }, res)
@@ -71,7 +72,6 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
         return res.status(500).json({ status: "Error", message: error.message });
     }
 }
-
 
 async function createNewContact(data: object, res: Response) {
     console.log("creating new contact");
@@ -87,7 +87,6 @@ async function createNewContact(data: object, res: Response) {
         throw error
     }
 }
-
 
 async function handleExisitingContact(existingContacts: any[], primaryContact: PrimaryContact | null | undefined) {
 
