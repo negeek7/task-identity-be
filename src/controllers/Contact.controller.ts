@@ -8,7 +8,6 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
         const { email, phoneNumber } = req.body;
         if (!email && !phoneNumber) return res.status(400).json({ status: "Error", message: "Please provide user email or phone number" });
 
-
         // getting any existing contacts
         const existingContacts = await prisma.contact.findMany({
             where: {
@@ -18,28 +17,11 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
                 ]
             }
         });
-
         console.log(existingContacts, "existingContacts");
-
-        // actions for if existing contacts exists
-        // if(existingContacts.length === 1) {
-        //     let contact = existingContacts[0]; 
-        //     let data: {[key: string]: any} = {
-        //         primaryContactId: null,
-        //         emails: [],
-        //         phoneNumbers: [],
-        //         secondaryContactIds: []
-        //     };
-
-        //     data.primaryContactId = contact.id;
-        //     data.emails.push(contact.email);
-        //     data.phoneNumbers.push(contact.phoneNumber);
-        // }
+        console.log(existingContacts.length, "existingContacts length");
 
         if (existingContacts.length > 0) {
-
-            console.log(existingContacts.length, "existingContacts length");
-
+            
             // structure for identify response
             let newContact = null;
             let data: { [key: string]: any } = {
@@ -48,25 +30,6 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
                 phoneNumbers: [],
                 secondaryContactIds: []
             };
-
-            // finding if identify query has new info
-            const isDuplicate = existingContacts.some(contact => {
-                if (email === null || phoneNumber === null) {
-                    return true;
-                } else {
-                    contact.phoneNumber === phoneNumber &&
-                        contact.email === email
-                }
-            }
-            );
-
-            if (!isDuplicate) {
-                console.log("duplicate handler")
-                newContact = await createNewContact({ email, phoneNumber }, "secondary", res);
-                data.emails.push(email);
-                data.phoneNumbers.push(phoneNumber);
-                data.secondaryContactIds.push(newContact?.id)
-            }
 
             for (let i = 0; i < existingContacts.length; i++) {
                 let contact = existingContacts[i];
