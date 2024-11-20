@@ -34,17 +34,17 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
 
         if (existingContacts.length > 0) {
 
-            let primaryContact: PrimaryContact | undefined = existingContacts.find(contact => contact.linkPrecedence === "primary");
+            let primaryContact: PrimaryContact | null | undefined = existingContacts.find(contact => contact.linkPrecedence === "primary");
 
             if (!primaryContact) {
-                primaryContact = await getPrimaryContact()
+                primaryContact = await getPrimaryContact(existingContacts);
             }
 
             // checking if payload contains some unique info
             let isPayloadExist = existingContacts.some((contact) => {
-                if (phoneNumber && !email) contact.phoneNumber === phoneNumber;
-                else if (email && !phoneNumber) contact.email === email;
-                else contact.phoneNumber === phoneNumber && contact.email === email;
+                if (phoneNumber && !email) return contact.phoneNumber === phoneNumber;
+                else if (email && !phoneNumber) return contact.email === email;
+                else return contact.phoneNumber === phoneNumber && contact.email === email;
             });
 
             if (!isPayloadExist) {
@@ -58,8 +58,6 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
             }
 
             let data = await handleExisitingContact(existingContacts, primaryContact);
-
-
             console.log(data, "DATA");
             return res.status(200).json({ status: "Success", contact: data })
 
@@ -91,7 +89,7 @@ async function createNewContact(data: object, res: Response) {
 }
 
 
-async function handleExisitingContact(existingContacts: any[], primaryContact: PrimaryContact | undefined) {
+async function handleExisitingContact(existingContacts: any[], primaryContact: PrimaryContact | null | undefined) {
 
     let data: { [key: string]: any } = {
         primaryContactId: null,
@@ -106,7 +104,7 @@ async function handleExisitingContact(existingContacts: any[], primaryContact: P
         data.emails.push(primaryContact.email);
         data.phoneNumbers.push(primaryContact.phoneNumber);
 
-        if (existingContacts.length === 1) return data;
+        if (existingContacts.length === 1 && existingContacts[0].linkPrecedence === "primary") return data;
     }
 
     for (let i = 0; i < existingContacts.length; i++) {
@@ -136,5 +134,4 @@ async function getPrimaryContact(existingContacts: any) {
     } catch (error) {
         throw error
     }
-
 }
