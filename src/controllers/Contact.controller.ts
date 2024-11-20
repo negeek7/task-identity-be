@@ -21,34 +21,15 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
         console.log(existingContacts.length, "existingContacts length");
 
         if (existingContacts.length > 0) {
-            
             // structure for identify response
-            let newContact = null;
-            let data: { [key: string]: any } = {
-                primaryContactId: null,
-                emails: [],
-                phoneNumbers: [],
-                secondaryContactIds: []
-            };
-
-            for (let i = 0; i < existingContacts.length; i++) {
-                let contact = existingContacts[i];
-                if (contact.linkPrecedence === "primary") {
-                    data.primaryContactId = contact.id;
-                    data.emails.unshift(contact.email);
-                    data.phoneNumbers.unshift(contact.phoneNumber);
-                } else {
-                    data.emails.push(contact.email);
-                    data.phoneNumbers.push(contact.phoneNumber);
-                    data.secondaryContactIds.push(contact.id);
-                }
-            }
-
+            let data = await handleExisitingContact(existingContacts);
+            console.log(data, "DATA");
             return res.status(200).json({ status: "Success", contact: data })
         } else {
             let newContact = await createNewContact({ email, phoneNumber }, "primary", res)
             return res.status(200).json({ status: "Success", newContact });
         }
+
     } catch (error: any) {
         console.log("Error creating contact", error);
         return res.status(500).json({ status: "Error", message: error.message });
@@ -70,4 +51,35 @@ async function createNewContact(data: object, linkPrecedence: string, res: Respo
         console.log("Error creating new contact", error);
         throw error
     }
+}
+
+
+async function handleExisitingContact(existingContacts: any[]){
+        let data: { [key: string]: any } = {
+            primaryContactId: null,
+            emails: [],
+            phoneNumbers: [],
+            secondaryContactIds: []
+        };
+
+        if(existingContacts.length === 1 && existingContacts[0].linkPrecedence === "primary") {
+            let contact = existingContacts[0];
+            data.primaryContactId = contact.id;
+            data.emails.unshift(contact.email);
+            data.phoneNumbers.unshift(contact.phoneNumber);
+            return data;
+        }
+
+        for (let i = 0; i < existingContacts.length; i++) {
+            let contact = existingContacts[i];
+            if (contact.linkPrecedence === "primary") {
+                data.primaryContactId = contact.id;
+                data.emails.unshift(contact.email);
+                data.phoneNumbers.unshift(contact.phoneNumber);
+            } else {
+                data.emails.push(contact.email);
+                data.phoneNumbers.push(contact.phoneNumber);
+                data.secondaryContactIds.push(contact.id);
+            }
+        }
 }
