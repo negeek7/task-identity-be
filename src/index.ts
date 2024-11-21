@@ -13,7 +13,7 @@ app.listen(PORT, () => {
 
 app.use(express.json());
 
-app.get("/", (req, res) => {
+app.get("/", (req: Request, res: Response) => {
     res.send("Hello Bitespeed!");
 });
 
