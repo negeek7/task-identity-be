@@ -14,6 +14,13 @@ interface PrimaryContact {
     deletedAt?: Date | null;
 }
 
+interface ResponseData {
+    primaryContactId: number;
+    emails: string[];
+    phoneNumbers: string[];
+    secondaryContactIds: number[];
+}
+
 export async function handleIdentifyContact(req: Request, res: Response): Promise<any> {
     try {
         const { email, phoneNumber } = req.body;
@@ -57,8 +64,8 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
                 let newContact = await createNewContact({ email, phoneNumber, linkPrecedence: "secondary", linkedId: primaryContact?.id }, res);
                 let data = await handleExisitingContact(existingContacts, primaryContact);
 
-                if (email) data.emails.push(newContact.email);
-                if (phoneNumber) data.phoneNumbers.push(newContact.phoneNumber);
+                if (newContact.email) data.emails.push(newContact.email);
+                if (newContact.phoneNumber) data.phoneNumbers.push(newContact.phoneNumber);
                 data.secondaryContactIds.push(newContact.id);
                 return res.status(200).json({ status: "Success", contact: data });
             }
@@ -69,7 +76,9 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
 
         } else {
             let newContact = await createNewContact({ email, phoneNumber, linkPrecedence: "primary" }, res)
-            return res.status(200).json({ status: "Success", newContact });
+            let data = await handleExisitingContact(null, newContact);
+            
+            return res.status(200).json({ status: "Success", contact: data });
         }
 
     } catch (error: any) {
@@ -93,10 +102,10 @@ async function createNewContact(data: object, res: Response) {
     }
 }
 
-async function handleExisitingContact(existingContacts: any[], primaryContact: PrimaryContact | null | undefined) {
+async function handleExisitingContact(existingContacts: any[] | null, primaryContact: PrimaryContact | null | undefined) {
 
-    let data: { [key: string]: any } = {
-        primaryContactId: null,
+    let data : ResponseData = {
+        primaryContactId: 0,
         emails: [],
         phoneNumbers: [],
         secondaryContactIds: []
@@ -105,21 +114,28 @@ async function handleExisitingContact(existingContacts: any[], primaryContact: P
     // setting primary field first
     if (primaryContact) {
         data.primaryContactId = primaryContact.id;
-        data.emails.push(primaryContact.email);
-        data.phoneNumbers.push(primaryContact.phoneNumber);
+        if (primaryContact.email) {
+            data.emails.push(primaryContact.email);
+        }
+        if (primaryContact.phoneNumber) {
+            data.phoneNumbers.push(primaryContact.phoneNumber);
+        }
 
-        if (existingContacts.length === 1 && existingContacts[0].linkPrecedence === "primary") return data;
+        if (existingContacts?.length === 1 && existingContacts[0].linkPrecedence === "primary") return data;
     }
 
-    for (let i = 0; i < existingContacts.length; i++) {
-        let contact = existingContacts[i];
-
-        if (contact.linkPrecedence === "primary") continue;
-
-        data.emails.push(contact.email);
-        data.phoneNumbers.push(contact.phoneNumber);
-        data.secondaryContactIds.push(contact.id);
+    if(existingContacts) {
+        for (let i = 0; i < existingContacts.length; i++) {
+            let contact = existingContacts[i];
+    
+            if (contact.linkPrecedence === "primary") continue;
+    
+            data.emails.push(contact.email);
+            data.phoneNumbers.push(contact.phoneNumber);
+            data.secondaryContactIds.push(contact.id);
+        }
     }
+
     return data;
 }
 
