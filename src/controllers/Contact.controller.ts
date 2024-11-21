@@ -36,9 +36,6 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
             }
         });
 
-        console.log(existingContacts, "existingContacts");
-        console.log(existingContacts.length, "existingContacts length");
-
         if (existingContacts.length > 0) {
 
             // check for other linked contacts
@@ -60,8 +57,7 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
             });
 
             if (!isPayloadExist) {
-                console.log("WWHHWHWHWH")
-                let newContact = await createNewContact({ email, phoneNumber, linkPrecedence: "secondary", linkedId: primaryContact?.id }, res);
+                let newContact = await createNewContact({ email, phoneNumber, linkPrecedence: "secondary", linkedId: primaryContact?.id });
                 let data = await handleExisitingContact(existingContacts, primaryContact);
 
                 if (newContact.email) data.emails.push(newContact.email);
@@ -71,13 +67,10 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
             }
 
             let data = await handleExisitingContact(existingContacts, primaryContact);
-            console.log(data, "DATA");
             return res.status(200).json({ status: "Success", contact: data });
-
         } else {
-            let newContact = await createNewContact({ email, phoneNumber, linkPrecedence: "primary" }, res)
+            let newContact = await createNewContact({ email, phoneNumber, linkPrecedence: "primary" })
             let data = await handleExisitingContact(null, newContact);
-            
             return res.status(200).json({ status: "Success", contact: data });
         }
 
@@ -87,8 +80,7 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
     }
 }
 
-async function createNewContact(data: object, res: Response) {
-    console.log("creating new contact");
+async function createNewContact(data: object) {
     try {
         const newContact = await prisma.contact.create({
             data: {
