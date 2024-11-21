@@ -13,6 +13,10 @@ app.listen(PORT, () => {
 
 app.use(express.json());
 
+app.get("/", (req, res) => {
+    res.send("Hello Bitespeed!");
+});
+
 app.post('/api/new', async (req: Request, res: Response): Promise<any> => {
     try {
         const { email, phoneNumber } = req.body;
