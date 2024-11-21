@@ -35,39 +35,62 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
                 ]
             }
         });
+        console.log(existingContacts, "existingContacts");
 
         if (existingContacts.length > 0) {
+            
+            let primaryContact: PrimaryContact | null = null;
 
             // check for other linked contacts
             if (existingContacts.length === 1 && existingContacts[0].linkPrecedence === "primary") {
                 return await handlePrimaryLinkedContact(existingContacts, res);
             }
 
-            let primaryContact: PrimaryContact | null | undefined = existingContacts.find(contact => contact.linkPrecedence === "primary");
+            let filterPrimary = existingContacts.filter(contact => contact.linkPrecedence === "primary");
+
+            if(filterPrimary.length === 1) {
+                primaryContact = filterPrimary[0];
+            } else {
+                let primary = existingContacts.find(contact => contact.email === email);
+                let secondary = existingContacts.find(contact => contact.phoneNumber === phoneNumber);
+
+                let updateContactToSecondary = await prisma.contact.updateMany({
+                    where: {
+                        id: secondary?.id
+                    },
+                    data: {
+                        linkedId: primary?.id,
+                        linkPrecedence: "secondary"
+                    }
+                })
+                
+            }
+
+            console.log(primaryContact);
 
             if (!primaryContact) {
                 primaryContact = await getPrimaryContact(existingContacts);
             }
 
             // checking if payload contains some unique info
-            let isPayloadExist = existingContacts.some((contact) => {
-                if (phoneNumber && !email) return contact.phoneNumber === phoneNumber;
-                else if (email && !phoneNumber) return contact.email === email;
-                else return contact.phoneNumber === phoneNumber && contact.email === email;
-            });
+            // let isPayloadExist = existingContacts.some((contact) => {
+            //     if (phoneNumber && !email) return contact.phoneNumber === phoneNumber;
+            //     else if (email && !phoneNumber) return contact.email === email;
+            //     else return contact.phoneNumber === phoneNumber && contact.email === email;
+            // });
 
-            if (!isPayloadExist) {
-                let newContact = await createNewContact({ email, phoneNumber, linkPrecedence: "secondary", linkedId: primaryContact?.id });
-                let data = await handleExisitingContact(existingContacts, primaryContact);
+            // if (!isPayloadExist) {
+            //     let newContact = await createNewContact({ email, phoneNumber, linkPrecedence: "secondary", linkedId: primaryContact?.id });
+            //     let data = await handleExisitingContact(existingContacts, primaryContact);
 
-                if (newContact.email) data.emails.push(newContact.email);
-                if (newContact.phoneNumber) data.phoneNumbers.push(newContact.phoneNumber);
-                data.secondaryContactIds.push(newContact.id);
-                return res.status(200).json({ status: "Success", contact: data });
-            }
+            //     if (newContact.email) data.emails.push(newContact.email);
+            //     if (newContact.phoneNumber) data.phoneNumbers.push(newContact.phoneNumber);
+            //     data.secondaryContactIds.push(newContact.id);
+            //     return res.status(200).json({ status: "Success", contact: data });
+            // }
 
-            let data = await handleExisitingContact(existingContacts, primaryContact);
-            return res.status(200).json({ status: "Success", contact: data });
+            // let data = await handleExisitingContact(existingContacts, primaryContact);
+            // return res.status(200).json({ status: "Success", contact: data });
         } else {
             let newContact = await createNewContact({ email, phoneNumber, linkPrecedence: "primary" })
             let data = await handleExisitingContact(null, newContact);
