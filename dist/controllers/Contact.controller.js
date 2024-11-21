@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,11 +7,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleIdentifyContact = handleIdentifyContact;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
-function handleIdentifyContact(req, res) {
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
+export function handleIdentifyContact(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { email, phoneNumber } = req.body;
@@ -33,13 +30,13 @@ function handleIdentifyContact(req, res) {
                 if (existingContacts.length === 1 && existingContacts[0].linkPrecedence === "primary") {
                     return yield handlePrimaryLinkedContact(existingContacts, res);
                 }
-                let filterPrimary = existingContacts.filter(contact => contact.linkPrecedence === "primary");
+                let filterPrimary = existingContacts.filter((contact) => contact.linkPrecedence === "primary");
                 if (filterPrimary.length === 1) {
                     primaryContact = filterPrimary[0];
                 }
                 else {
-                    let primary = existingContacts.find(contact => contact.email === email);
-                    let secondary = existingContacts.find(contact => contact.phoneNumber === phoneNumber);
+                    let primary = existingContacts.find((contact) => contact.email === email);
+                    let secondary = existingContacts.find((contact) => contact.phoneNumber === phoneNumber);
                     let updateContactToSecondary = yield prisma.contact.update({
                         where: {
                             id: secondary === null || secondary === void 0 ? void 0 : secondary.id
@@ -154,7 +151,7 @@ function handlePrimaryLinkedContact(existingContacts, res) {
     return __awaiter(this, void 0, void 0, function* () {
         let primaryContact = existingContacts[0];
         let otherContacts = yield prisma.contact.findMany();
-        let linkedContacts = otherContacts.filter(contact => contact.linkedId === primaryContact.id);
+        let linkedContacts = otherContacts.filter((contact) => contact.linkedId === primaryContact.id);
         let data = yield handleExisitingContact(linkedContacts, primaryContact);
         return res.status(200).json({ status: "Success", contact: data });
     });
