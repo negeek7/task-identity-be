@@ -49,15 +49,13 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
                 if(primaryContact.email !== email || primaryContact.phoneNumber !== phoneNumber){
                     let newContact = await createNewContact({email, phoneNumber, linkPrecedence:"secondary", linkedId: primaryContact.id})
                     contacts = await handleExisitingContact([newContact], primaryContact);
-                }else {
+                } else {
                     let linkedContacts = await getPrimaryLinkedContact(primaryContact, res);
                     contacts = await handleExisitingContact(linkedContacts, primaryContact);
                 }
+
                 return res.status(200).json({status: "Success", contact: contacts})
-
             }
-
-
 
             let filterPrimary = existingContacts.filter((contact: PrimaryContact) => contact.linkPrecedence === "primary");
 
