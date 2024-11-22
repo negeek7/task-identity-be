@@ -45,6 +45,8 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
                 return await handlePrimaryLinkedContact(existingContacts, res);
             }
 
+
+
             let filterPrimary = existingContacts.filter((contact: PrimaryContact) => contact.linkPrecedence === "primary");
 
             if(filterPrimary.length === 1) {
@@ -72,24 +74,24 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
             }
 
             // checking if payload contains some unique info
-            // let isPayloadExist = existingContacts.some((contact) => {
-            //     if (phoneNumber && !email) return contact.phoneNumber === phoneNumber;
-            //     else if (email && !phoneNumber) return contact.email === email;
-            //     else return contact.phoneNumber === phoneNumber && contact.email === email;
-            // });
+            let isPayloadExist = existingContacts.some((contact) => {
+                if (phoneNumber && !email) return contact.phoneNumber === phoneNumber;
+                else if (email && !phoneNumber) return contact.email === email;
+                else return contact.phoneNumber === phoneNumber && contact.email === email;
+            });
 
-            // if (!isPayloadExist) {
-            //     let newContact = await createNewContact({ email, phoneNumber, linkPrecedence: "secondary", linkedId: primaryContact?.id });
-            //     let data = await handleExisitingContact(existingContacts, primaryContact);
+            if (!isPayloadExist) {
+                let newContact = await createNewContact({ email, phoneNumber, linkPrecedence: "secondary", linkedId: primaryContact?.id });
+                let data = await handleExisitingContact(existingContacts, primaryContact);
 
-            //     if (newContact.email) data.emails.push(newContact.email);
-            //     if (newContact.phoneNumber) data.phoneNumbers.push(newContact.phoneNumber);
-            //     data.secondaryContactIds.push(newContact.id);
-            //     return res.status(200).json({ status: "Success", contact: data });
-            // }
+                if (newContact.email) data.emails.push(newContact.email);
+                if (newContact.phoneNumber) data.phoneNumbers.push(newContact.phoneNumber);
+                data.secondaryContactIds.push(newContact.id);
+                return res.status(200).json({ status: "Success", contact: data });
+            }
 
-            // let data = await handleExisitingContact(existingContacts, primaryContact);
-            // return res.status(200).json({ status: "Success", contact: data });
+            let data = await handleExisitingContact(existingContacts, primaryContact);
+            return res.status(200).json({ status: "Success", contact: data });
         } else {
             let newContact = await createNewContact({ email, phoneNumber, linkPrecedence: "primary" })
             let data = await handleExisitingContact(null, newContact);
