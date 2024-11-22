@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { handleIdentifyContact } from './controllers/Contact.controller.ts';
+import { handleIdentifyContact } from './controllers/Contact.controller';
 
 const app = express();
 const PORT = process.env.PORT;
