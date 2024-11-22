@@ -42,7 +42,19 @@ export async function handleIdentifyContact(req: Request, res: Response): Promis
 
             // check for other linked contacts
             if (existingContacts.length === 1 && existingContacts[0].linkPrecedence === "primary") {
-                return await handlePrimaryLinkedContact(existingContacts, res);
+
+                let primaryContact = existingContacts[0];
+                let contacts = null;
+
+                if(primaryContact.email !== email || primaryContact.phoneNumber !== phoneNumber){
+                    let newContact = await createNewContact({email, phoneNumber, linkPrecedence:"secondary"})
+                    contacts = await handleExisitingContact([newContact], primaryContact);
+                }else {
+                    let linkedContacts = await getPrimaryLinkedContact(primaryContact, res);
+                    contacts = await handleExisitingContact(linkedContacts, primaryContact);
+                }
+                return res.status(200).json({status: "Success", contact: contacts})
+
             }
 
 
@@ -172,11 +184,9 @@ async function getPrimaryContact(existingContacts: any) {
     }
 }
 
-async function handlePrimaryLinkedContact(existingContacts: any, res: Response){
-    let primaryContact = existingContacts[0];
+async function getPrimaryLinkedContact(primaryContact: any, res: Response){
     let otherContacts = await prisma.contact.findMany();
     let linkedContacts = otherContacts.filter((contact: PrimaryContact) => contact.linkedId === primaryContact.id);
 
-    let data = await handleExisitingContact(linkedContacts, primaryContact);
-    return res.status(200).json({ status: "Success", contact: data });
+    return linkedContacts
 }
