@@ -1,0 +1,53 @@
+
+email or password (Request body)
+
+- Get the email or phoneNumber from request
+
+- Match with email or password
+    - check the linkPrecedence
+    - not primary?
+        - get the linkedId
+        - get the contact of linkedId
+
+- set the contact to "primary" if no same contact is found
+
+- If an incoming request has either of phoneNumber or email common 
+to an existing contact but contains new information, the service will 
+create a “secondary” Contact row.
+
+
+
+
+
+{
+    "contact":{
+        "primaryContatctId": 11,
+        "emails": ["george@hillvalley.edu","biffsucks@hillvalley.edu"]
+        "phoneNumbers": ["919191","717171"]
+        "secondaryContactIds": [27]
+    }
+}
+
+
+[
+  {
+    id: 2,
+    phoneNumber: '123456',
+    email: 'zegzeg@gmail.com',
+    linkedId: null,
+    linkPrecedence: null,
+    createdAt: 2024-11-18T12:30:12.226Z,
+    updatedAt: 2024-11-18T12:30:12.226Z,
+    deletedAt: null
+  }
+  {
+    id: 1,
+    phoneNumber: '123456',
+    email: 'negeg@gmail.com',
+    linkedId: null,
+    linkPrecedence: null,
+    createdAt: 2024-11-18T11:49:09.579Z,
+    updatedAt: 2024-11-18T11:49:09.579Z,
+    deletedAt: null
+  },
+] 
